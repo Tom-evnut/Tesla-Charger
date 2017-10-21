@@ -2,6 +2,13 @@
 Tesla Gen 2 Charger Phase 1 driver experimental code v1
 2017
 D.Maguire
+Tweaks by T de Bree
+
+Notes:
+Serial control
+s to toggle charge on or off
+v followed by the desired voltage to change setpoint Whole number only
+c followed by the desired current to change setpoint Whole number only
 */
 
 #include <due_can.h>  
@@ -21,24 +28,26 @@ template<class T> inline Print &operator <<(Print &obj, T arg) { obj.print(arg);
 
 //*********GENERAL VARIABLE   DATA ******************
 
+uint16_t voltset = 0;
+uint16_t curset = 0;
+int  setting = 1;
+int incomingByte = 0;
+int state =0;
 
 CAN_FRAME outframe;  //A structured variable according to due_can library for transmitting CAN data.
 
 
 //setup bytes to contain CAN data
 //bytes for 0x045c/////////////////////
-byte test0;  //0x45c byte 0
-byte test1;  //0x45c byte 1
-byte test2;  //0x45c byte 2
-byte test3;  //0x45c byte 3
+byte test52;  //0x45c byte 2 test 2
+byte test53;  //0x45c byte 3 test 3
 /////////////////////////////////////////
 
 //bytes for 0x042c/////////////////////
-byte test4;  //0x45c byte 0
-byte test5;  //0x45c byte 1
-byte test6;  //0x45c byte 2
-byte test7;  //0x45c byte 4
-byte test8;  //0x45c byte 5
+byte test20;  //0x42c byte 0 test 4
+byte test21;  //0x42c byte 1 test 5
+byte test24;  //0x42c byte 4 test 8
+
 
 /////////////////////////////////////////
 
@@ -80,16 +89,12 @@ void setup()
 
 /////////Setup initial state of 2 variable CAN messages///////////////////////////
 
-     test0=0x13;
-     test1=0x8c;
-     test2=0x15;
-     test3=0x0e;
+     test52=0x15;
+     test53=0x0e;
 
-     test4=0x42;
-     test5=0x60;
-     test6=0x00;
-     test7=0x00;
-     test8=0x64;
+     test20=0x42;
+     test21=0x60;
+     test24=0x64;
 ///////////////////////////////////////////////////////////////////////////////////
 
 
@@ -99,154 +104,87 @@ void setup()
 
 
 
-void loop()
-{ 
-Serial.println("State 1: mains off. Wait 5 secs");
-delay(5000);
-Serial.println("State 2:");
-     test4=0x42;
-     test5=0x60;
-     test6=0x00;
-     test7=0x00;
-     test8=0x68;
-delay(500);  
-Serial.println("State 3:");
-     test4=0x42;
-     test5=0x60;
-     test6=0x00;
-     test7=0x00;
-     test8=0x69; 
-     delay(500); 
-     
-Serial.println("State 4:");
-     test4=0x42;
-     test5=0x60;
-     test6=0x00;
-     test7=0x00;
-     test8=0x6d; 
-     delay(600); 
-     
-Serial.println("State 5:");
-     test4=0x42;
-     test5=0xc4;
-     test6=0x00;
-     test7=0x00;
-     test8=0x6d; 
-     delay(500); 
-Serial.println("MAINS ON NOW!!!!!!");    
-     delay(500);
+void loop() {
+  // put your main code here, to run repeatedly:
 
-Serial.println("State 6:");  
-     test0=0x15;
-     test1=0x8c;
-     test2=0x15;
-     test3=0x2e;
-     delay(500);
+ if (Serial.available() > 0)
+  {
+    incomingByte = Serial.read(); // read the incoming byte:
 
-Serial.println("State 7:");
-     test4=0x42;
-     test5=0xc4;
-     test6=0x00;
-     test7=0x00;
-     test8=0x6c; 
-     delay(500); 
+    switch (incomingByte)
+    {
+      case 118://v for voltage setting in whole numbers
+         if (Serial.available() > 0)
+         {
+          voltset = (Serial.parseInt()*100);
+          setting = 1;
+         }
+        break;
+        
+       case 115://s for start AND stop
+         if (Serial.available() > 0)
+         {
+          state = !state;
+          setting = 1;
+         }
+        break;
+      case 99: //c for current setting in whole numbers
+         if (Serial.available() > 0)
+         {
+          curset = (Serial.parseInt()*2000);
+          setting = 1;
+         }
+        break;
 
-Serial.println("State 8:368v target.");  
-     test0=0xf8;
-     test1=0x8f;
-     test2=0x14;
-     test3=0x2e;
-     delay(500);
-     
-Serial.println("State 9");
-     test4=0x42;
-     test5=0xc4;
-     test6=0x00;
-     test7=0x00;
-     test8=0xfc; 
-     delay(5000); 
-     
-Serial.println("State 10:");
-     test4=0x42;
-     test5=0xc4;
-     test6=0x00;
-     test7=0x00;
-     test8=0xfe; 
-     delay(10000);
+      default: 
+      // if nothing else matches, do the default
+      // default is optional
+        break; 
+      
+    }
+  }
+ 
+  if (setting == 1) //display if any setting changed
+    {
+    Serial.println();
+    if (state == 1)
+    {
+      Serial.print("Charger On   ");
+    }
+    else
+    {
+      Serial.print("Charger Off   ");
+    }
+    Serial.print("Set voltage : ");
+    Serial.print(voltset*0.01,0);  
+    Serial.print("V | Set current : ");
+    Serial.print(curset*0.0005,0);
+    Serial.print(" A");
+     setting = 0;
+    }
 
-Serial.println("State 11:current ramp");
-     test4=0x42;
-     test5=0xc4;
-     test6=0x5f;
-     test7=0x00;
-     test8=0xfe; 
-     delay(2000);
+switch (state)
+  {
+    case 0: //Charger off
+       test52=0x15;
+       test53=0x0e;
+       test21=0x60;
+       test24=0x64;
+      break;
+  
+    case 1://Charger on
+       test52=0x14;
+       test53=0x2E;
+       test21=0xc4;
+       test24=0xfe;
+      break;
+  
+    default:
+        // if nothing else matches, do the default
+      break;
+  }
 
-     Serial.println("State 11:current ramp2");
-     test4=0x42;
-     test5=0xc4;
-     test6=0x75;
-     test7=0x02;
-     test8=0xfe; 
-     delay(2000);
-
-     Serial.println("State 11:current ramp3");
-     test4=0x42;
-     test5=0xc4;
-     test6=0x2c;
-     test7=0x04;
-     test8=0xfe; 
-     delay(2000);
-
-     Serial.println("State 11:current ramp4");
-     test4=0x42;
-     test5=0xc4;
-     test6=0x79;
-     test7=0x05;
-     test8=0xfe; 
-     delay(2000);
-
-     Serial.println("State 11:current ramp5");
-     test4=0x42;
-     test5=0xc4;
-     test6=0xb7;
-     test7=0x08;
-     test8=0xfe; 
-     delay(2000);
-
-
-     Serial.println("State 11:current ramp6");
-     test4=0x42;
-     test5=0xc4;
-     test6=0xcd;
-     test7=0x08;
-     test8=0xfe; 
-     delay(2000);
-
-     Serial.println("State 11:current ramp6");
-     test4=0x42;
-     test5=0xc4;
-     test6=0xb0;
-     test7=0x0c;
-     test8=0xfe; 
-     delay(2000);
-
-     Serial.println("State 11:current ramp7");
-     test4=0x42;
-     test5=0xc4;
-     test6=0xa8;
-     test7=0x14;
-     test8=0xfe; 
-     delay(2000);
-
-
-while(1);
-{
-//wait here forever
-}    
 }
-
-
 
 void Charger_msgs()
 {
@@ -254,10 +192,10 @@ void Charger_msgs()
         outframe.length = 8;            // Data payload 8 bytes
         outframe.extended = 0;          // Extended addresses - 0=11-bit 1=29bit
         outframe.rtr=1;                 //No request
-        outframe.data.bytes[0]=test0;  
-        outframe.data.bytes[1]=test1;
-        outframe.data.bytes[2]=test2;
-        outframe.data.bytes[3]=test3;
+        outframe.data.bytes[0]=highByte(volset);  //Voltage setpoint
+        outframe.data.bytes[1]=lowByte(volset);//Voltage setpoint
+        outframe.data.bytes[2]=test52;
+        outframe.data.bytes[3]=test53;
         outframe.data.bytes[4]=0x00;
         outframe.data.bytes[5]=0x00;
         outframe.data.bytes[6]=0x90;
@@ -268,11 +206,11 @@ void Charger_msgs()
         outframe.length = 8;            // Data payload 8 bytes
         outframe.extended = 0;          // Extended addresses - 0=11-bit 1=29bit
         outframe.rtr=1;                 //No request
-        outframe.data.bytes[0]=test4; 
-        outframe.data.bytes[1]=test5; 
-        outframe.data.bytes[2]=test6;  
-        outframe.data.bytes[3]=test7;  
-        outframe.data.bytes[4]=test8;
+        outframe.data.bytes[0]=test20; 
+        outframe.data.bytes[1]=test21; 
+        outframe.data.bytes[2]=lowByte(curset); //Current setpoint
+        outframe.data.bytes[3]=highByte(curset); //Current setpoint 
+        outframe.data.bytes[4]=test24;
         outframe.data.bytes[5]=0x00;  
         outframe.data.bytes[6]=0x00;
         outframe.data.bytes[7]=0x00;
@@ -300,7 +238,6 @@ void Charger_msgs()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 }
-
 
 
 
