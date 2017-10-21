@@ -21,6 +21,7 @@ template<class T> inline Print &operator <<(Print &obj, T arg) { obj.print(arg);
 
 
 //*********GENERAL VARIABLE   DATA ******************
+int debug = 1; // 1 = show canbus feedback
 
 uint16_t voltset = 0;
 uint16_t curset = 0;
@@ -31,6 +32,16 @@ int  setting = 1;
 int incomingByte = 0;
 int state =0;
 unsigned long tlast =0;
+
+
+//*********Feedback from charge VARIABLE   DATA ******************
+uint16_t dcvolt = 0;
+uint16_t dccur = 0;
+
+uint16_t acvolt = 0;
+uint16_t accur = 0;
+
+int newframe=0;
 
 CAN_FRAME outframe;  //A structured variable according to due_can library for transmitting CAN data.
 
@@ -104,6 +115,11 @@ void setup()
 
 void loop() {
   // put your main code here, to run repeatedly:
+  if (Can1.available() > 0) 
+  {
+    Can1.read(incoming); 
+    candecode(incoming);
+  } 
 
  if (Serial.available() > 0)
   {
@@ -206,7 +222,46 @@ if (curreq != curset)
       }
   }
 
+if (debug != 0)
+  {
+    if (newframe & 3 != 0)
+    {
+     Serial.println();
+     Serial.print(millis()); 
+     Serial.print("  Charger Feebback //  AC voltage : ");
+     Serial.print(acvolt);
+     Serial.print("  AC current : ");
+     Serial.print(accur/28);
+     Serial.print("  DC voltage : ");
+     Serial.print(dcvolt/100,2);
+     Serial.print("  DC current : ");
+     Serial.print(dccur/1000,2);
+    }
+  }
 
+}
+
+
+void candecode(CAN_FRAME &frame)
+{
+  switch(frame.id)
+  {
+    case 0x207:
+      acvolt = frame.data.bytes[1];
+      accur = ((frame.data.bytes[8]&=3)*256+frame.data.bytes[7]);
+      newframe = newframe | 1;
+      break;
+
+    case 0x227: //dc feedback
+      dccur = frame.data.bytes[7]*256+frame.data.bytes[6];
+      dcvolt = frame.data.bytes[3]*256+frame.data.bytes[2];
+      newframe = newframe | 2;
+      break;
+
+    default:
+        // if nothing else matches, do the default
+      break;
+  }
 }
 
 void Charger_msgs()
