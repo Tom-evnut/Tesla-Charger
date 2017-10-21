@@ -3,12 +3,6 @@ Tesla Gen 2 Charger Phase 1 driver experimental code v1
 2017
 D.Maguire
 Tweaks by T de Bree
-
-Notes:
-Serial control
-s to toggle charge on or off
-v followed by the desired voltage to change setpoint Whole number only
-c followed by the desired current to change setpoint Whole number only
 */
 
 #include <due_can.h>  
@@ -30,9 +24,13 @@ template<class T> inline Print &operator <<(Print &obj, T arg) { obj.print(arg);
 
 uint16_t voltset = 0;
 uint16_t curset = 0;
+uint16_t curreq = 0;
+uint16_t currampt = 500; //500ms ramptime as default
+signed long curramp = 0;
 int  setting = 1;
 int incomingByte = 0;
 int state =0;
+unsigned long tlast =0;
 
 CAN_FRAME outframe;  //A structured variable according to due_can library for transmitting CAN data.
 
@@ -121,6 +119,14 @@ void loop() {
          }
         break;
         
+        case 116://t for current ramp time
+         if (Serial.available() > 0)
+         {
+          currampt = Serial.parseInt();
+          setting = 1;
+         }
+        break;
+        
        case 115://s for start AND stop
          if (Serial.available() > 0)
          {
@@ -159,7 +165,14 @@ void loop() {
     Serial.print(voltset*0.01,0);  
     Serial.print("V | Set current : ");
     Serial.print(curset*0.0005,0);
-    Serial.print(" A");
+    Serial.print(" A ");
+    Serial.print("  ms | Set ramptime : ");
+    Serial.print(currampt);
+
+    Serial.print(" Ramp current : ");
+    curramp = (curset-curreq)/500;
+    
+    Serial.print(curramp);    
      setting = 0;
     }
 
@@ -183,6 +196,16 @@ switch (state)
         // if nothing else matches, do the default
       break;
   }
+
+if (curreq != curset)
+  {
+    if ((millis()- tlast) > 1)
+      {
+        tlast = millis();
+        curreq = curreq + curramp;
+      }
+  }
+
 
 }
 
@@ -208,8 +231,8 @@ void Charger_msgs()
         outframe.rtr=1;                 //No request
         outframe.data.bytes[0]=test20; 
         outframe.data.bytes[1]=test21; 
-        outframe.data.bytes[2]=lowByte(curset); //Current setpoint
-        outframe.data.bytes[3]=highByte(curset); //Current setpoint 
+        outframe.data.bytes[2]=lowByte(curreq); //Current setpoint
+        outframe.data.bytes[3]=highByte(curreq); //Current setpoint 
         outframe.data.bytes[4]=test24;
         outframe.data.bytes[5]=0x00;  
         outframe.data.bytes[6]=0x00;
