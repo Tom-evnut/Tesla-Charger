@@ -44,7 +44,7 @@ uint16_t accur = 0;
 int newframe=0;
 
 CAN_FRAME outframe;  //A structured variable according to due_can library for transmitting CAN data.
-
+CAN_FRAME incoming;  //A structured variable according to due_can library for transmitting CAN data.
 
 //setup bytes to contain CAN data
 //bytes for 0x045c/////////////////////
@@ -270,8 +270,8 @@ void Charger_msgs()
         outframe.length = 8;            // Data payload 8 bytes
         outframe.extended = 0;          // Extended addresses - 0=11-bit 1=29bit
         outframe.rtr=1;                 //No request
-        outframe.data.bytes[0]=highByte(volset);  //Voltage setpoint
-        outframe.data.bytes[1]=lowByte(volset);//Voltage setpoint
+        outframe.data.bytes[0]=highByte(voltset);  //Voltage setpoint
+        outframe.data.bytes[1]=lowByte(voltset);//Voltage setpoint
         outframe.data.bytes[2]=test52;
         outframe.data.bytes[3]=test53;
         outframe.data.bytes[4]=0x00;
