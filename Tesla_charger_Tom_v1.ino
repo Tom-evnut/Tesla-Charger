@@ -153,7 +153,7 @@ void loop() {
       case 99: //c for current setting in whole numbers
          if (Serial.available() > 0)
          {
-          curset = (Serial.parseInt()*1500);
+          curset = (Serial.parseInt()*1000);
           setting = 1;
          }
         break;
@@ -180,7 +180,7 @@ void loop() {
     Serial.print("Set voltage : ");
     Serial.print(voltset*0.01,0);  
     Serial.print("V | Set current : ");
-    Serial.print(curset*0.00066666,0);
+    Serial.print(curset*0.001,0);
     Serial.print(" A ");
     Serial.print("  ms | Set ramptime : ");
     Serial.print(currampt);
