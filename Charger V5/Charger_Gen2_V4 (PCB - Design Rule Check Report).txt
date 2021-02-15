@@ -1,0 +1,83 @@
+Design Rule Check Report
+------------------------
+
+Report Written:     Thursday, January 24, 2019
+Design Path:        C:\Users\tomde\Documents\GitHub\Tesla-Charger\Charger V5\Charger_Gen2_V4.pcb
+Design Title:       
+Created:            03-Oct-17 12:16:38 PM
+Last Saved:         24-Jan-19 3:46:39 PM
+Editing Time:       2612 min
+Units:              mm (precision 2)
+
+
+Results
+=======
+
+Pad to Board Error (P-B) between (25.20 18.18) and (25.20 18.50) on Layer "[All]".
+    Error between Pad and Board, Gap is 0.17 needs to be 0.20.
+Pad to Board Error (P-B) between (-83.84 18.18) and (-83.84 18.50) on Layer "[All]".
+    Error between Pad and Board, Gap is 0.17 needs to be 0.20.
+Track to Pad Error (T-P) between (-46.80 -15.60) and (-46.80 -15.30) on Layer "Top Copper".
+    Error between Component Pad IC1.55 and Track (Net 'VDDOUT'), Gap is 0.20 needs to be 0.20.
+Track to Pad Error (T-P) between (-46.80 -14.40) and (-46.80 -14.70) on Layer "Top Copper".
+    Error between Component Pad IC1.58 (Net 'GND') and Track (Net 'VCC_3V3'), Gap is 0.17 needs to be 0.20.
+Track to Pad Error (T-P) between (-69.00 -14.90) and (-69.00 -15.20) on Layer "Top Copper".
+    Error between Component Pad IC1.124 (Net 'VDDOUT') and Track (Net 'VCC_3V3'), Gap is 0.17 needs to be 0.20.
+Pad to Pad Error (P-P) between (-37.76 -38.91) and (-37.91 -38.81) on Layer "[All]".
+    Error between Component Pad J1.1 (Net '+5Vcc') and Component Pad J1.6, Gap is 0.18 needs to be 0.20.
+Pad to Pad Error (P-P) between (-33.64 -38.91) and (-33.49 -38.81) on Layer "[All]".
+    Error between Component Pad J1.5 (Net 'GND') and Component Pad J1.7, Gap is 0.18 needs to be 0.20.
+Track to Via Error (T-V) between (-43.40 -14.70) and (-43.40 -15.05) on Layer "Top Copper".
+    Error between Track (Net 'VCC_3V3') and Via (Net 'VDDOUT'), Gap is 0.23 needs to be 0.25.
+Component to Component error (Cm-Cm) at (-47.69 -27.40) on layer "[Top]".
+    IC1 - C20, Gap is 0.00.
+Component to Component error (Cm-Cm) at (-3.30 5.86) on layer "[Top]".
+    SJ3 - J2, Gap is 0.00.
+
+Number of errors found : 10
+
+
+Settings
+========
+
+
+Spacings
+
+=========
+
+Tracks        Yes
+Pads and Vias Yes
+Shapes        Yes
+Text          Yes
+Board         Yes
+Drills        Yes
+Components    Yes
+
+
+Manufacturing
+
+==============
+
+Drill Breakout                  No
+Drill Backoff                   No
+Silkscreen Overlap              No
+Copper Text In Board            No
+Min Track Width                 No
+Min Annular Ring                No
+Min Paste Size                  No
+Vias In Pads                    No
+Unplated Vias                   No
+Unplated Pads With Inner Tracks No
+
+
+Nets
+
+=====
+
+Net Completion               No
+Dangling Tracks              No
+Net Track Length Differences No
+
+
+
+End Of Report.

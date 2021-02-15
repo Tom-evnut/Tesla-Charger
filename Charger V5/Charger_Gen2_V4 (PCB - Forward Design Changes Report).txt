@@ -1,0 +1,22 @@
+Forward Design Changes Report
+-----------------------------
+
+Report Written:     Monday, January 21, 2019
+Design Path:        C:\Users\tomde\Documents\GitHub\Tesla-Charger\Charger V5\Charger_Gen2_V4.pcb
+Design Title:       
+Created:            03-Oct-17 12:16:38 PM
+Last Saved:         21-Jan-19 5:06:33 PM
+Editing Time:       2537 min
+Units:              mm (precision 2)
+
+Disconnected pin "J1.1" from net "N0159".
+Disconnected pin "J1.5" from net "N0162".
+
+Deleted net "N0159".
+Deleted net "N0162".
+
+Connected pin "J1.1" to net "+5Vcc".
+Connected pin "J1.5" to net "GND".
+
+
+End Of Report.

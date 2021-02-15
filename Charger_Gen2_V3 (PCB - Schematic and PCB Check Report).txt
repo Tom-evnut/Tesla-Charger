@@ -1,0 +1,30 @@
+Schematic and PCB Check Report
+------------------------------
+
+Report Written:     Tuesday, December 18, 2018
+Design Path:        C:\Users\tomde\Documents\GitHub\Tesla-Charger\Charger_Gen2_V3.pcb
+Design Title:       
+Created:            03-Oct-17 12:16:38 PM
+Last Saved:         18-Dec-18 12:34:57 PM
+Editing Time:       2199 min
+Units:              mm (precision 2)
+
+
+Checking integrity of Schematic "C:\Users\tomde\Documents\GitHub\Tesla-Charger\Charger_Gen2_V3.sch" with PCB "C:\Users\tomde\Documents\GitHub\Tesla-Charger\Charger_Gen2_V3.pcb"
+================================================================================================================================================================================
+
+The PCB and Schematic designs do not match.
+To bring them into line, you will need to make the following changes to the PCB design:
+
+Component 'C-USC0805' package 'C0805' in PCB is newer version than Schematic, use Update Component to correct this.
+Component 'C-USC1206' package 'C1206' in PCB is newer version than Schematic, use Update Component to correct this.
+Component 'WE-CBF_0805' package '0805' in PCB is newer version than Schematic, use Update Component to correct this.
+Component 'LED0805' package 'CHIPLED_0805' in PCB is newer version than Schematic, use Update Component to correct this.
+Component 'R-US_R0805' package 'R0805' in PCB is newer version than Schematic, use Update Component to correct this.
+Component 'ATSAM3X/AAU' package 'LQFP144' in PCB is newer version than Schematic, use Update Component to correct this.
+Component 'CRYSTAL-3.2-2.5' package 'CRYSTAL-3.2-2.5' in PCB is newer version than Schematic, use Update Component to correct this.
+Component 'RESONATOR_EPSON_FC_145' package 'RESONATOR_EPSON_FC_145' in PCB is newer version than Schematic, use Update Component to correct this.
+Component 'VARISTORCN0603' package 'CT/CN0603' in PCB is newer version than Schematic, use Update Component to correct this.
+
+
+End Of Report.

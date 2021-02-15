@@ -1,0 +1,17 @@
+Schematic and PCB Check Report
+------------------------------
+
+Report Written:     Monday, January 21, 2019
+Design Path:        C:\Users\tomde\Documents\GitHub\Tesla-Charger\Charger V5\Charger_Gen2_V4.pcb
+Design Title:       
+Created:            03-Oct-17 12:16:38 PM
+Last Saved:         21-Jan-19 5:06:33 PM
+Editing Time:       2537 min
+Units:              mm (precision 2)
+
+
+Checking integrity of Schematic "C:\Users\tomde\Documents\GitHub\Tesla-Charger\Charger V5\Charger_Gen2_V4.sch" with PCB "C:\Users\tomde\Documents\GitHub\Tesla-Charger\Charger V5\Charger_Gen2_V4.pcb"
+======================================================================================================================================================================================================
+
+
+End Of Report.

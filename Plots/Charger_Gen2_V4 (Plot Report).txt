@@ -1,0 +1,443 @@
+Plot Report
+-----------
+
+Report Written:     Tuesday, December 18, 2018
+Design Path:        C:\Users\tomde\Documents\GitHub\Tesla-Charger\Charger_Gen2_V4.pcb
+Design Title:       
+Created:            03-Oct-17 12:16:38 PM
+Last Saved:         18-Dec-18 12:57:42 PM
+Editing Time:       2218 min
+Units:              mm (precision 2)
+
+
+Device Settings
+===============
+
+
+Gerber Settings
+===============
+
+    Leading zero suppression.
+    G01 assumed throughout.
+    Line termination <*> <CR> <LF>.
+    3.5 format absolute inches.
+    Format commands defined in Gerber file.
+    Aperture table defined in Gerber file.
+    Hardware arcs allowed.
+
+
+Drill Settings
+==============
+
+    Excellon Format 1    Format 3.5 absolute in inches.
+    Leading zero suppression.
+
+
+Plots Output
+============
+
+    Plot Job: "C:\Users\tomde\Documents\GitHub\Tesla-Charger\Charger_Gen2_V3.mop"
+
+
+Gerber Output
+=============
+
+C:\Users\tomde\Documents\GitHub\Tesla-Charger\Plots\Charger_Gen2_V4 - Top Copper.gbr
+
+    Layers:
+    --------------
+    Top Copper
+
+    D-Code Shape  (thou)
+    ------------------------------------------------
+    D16    Round 10.00
+    D19    Round 8.00
+    D88    Round 374.02
+    D89    Square 76.77
+    D90    Round 76.77
+    D91    Round 60.00
+    D92    Round 59.06
+    D93    Round 62.99
+    D94    Round 79.72
+    D95    Round 43.31
+    D96    Round 133.86
+    D97    Round 40.00
+    D98    Round 19.69
+    D99    Round 78.74
+    D100   Round 9.84
+    D101   Round 39.37
+    D102   Round 11.81
+    D103   Round 5.91
+    D114   Rectangle 29.53 X 129.92  Rotation 90
+    D115   Rectangle 151.57 X 196.85  Rotation 90
+    D116   Rectangle 55.00 X 60.00
+    D117   Rectangle 47.00 X 87.00
+    D118   Rectangle 87.00 X 142.00  Rotation 90
+    D119   Rectangle 42.13 X 85.04  Rotation 90
+    D120   Rectangle 275.59 X 433.07
+    D121   Rectangle 153.54 X 212.60
+    D122   Rectangle 78.74 X 120.08  Rotation 90
+    D123   Rectangle 49.21 X 157.48  Rotation 90
+    D124   Rectangle 55.00 X 60.00  Rotation 90
+    D125   Rectangle 62.99 X 133.86  Rotation 90
+    D126   Square 63.00
+    D127   Square 47.24
+    D128   Rectangle 51.18 X 59.06
+    D129   Rectangle 51.18 X 59.06  Rotation 90
+    D130   Rectangle 11.81 X 47.24
+    D131   Rectangle 11.81 X 47.24  Rotation 90
+    D132   Rectangle 41.34 X 51.18
+    D133   Rectangle 43.31 X 70.87
+    D134   Square 39.37
+    D135   Rectangle 30.00 X 95.00  Rotation 90
+    D136   Rectangle 19.69 X 42.32  Rotation 90
+    D137   Rectangle 19.69 X 42.32
+    D138   Rectangle 27.56 X 39.37  Rotation 90
+    D139   Rectangle 21.00 X 67.00  Rotation 90
+    D140   Rectangle 27.56 X 60.04  Rotation 90
+    D141   Rectangle 25.59 X 60.04  Rotation 90
+    D142   Rectangle 25.00 X 50.00
+    D143   Rectangle 118.11 X 141.73
+    D144   Rectangle 102.36 X 118.11  Rotation 90
+
+Gerber Output
+=============
+
+C:\Users\tomde\Documents\GitHub\Tesla-Charger\Plots\Charger_Gen2_V4 - Top Solder Mask.gbr
+
+    Layers:
+    -------------------
+    Top Solder Mask
+
+    D-Code Shape  (thou)
+    ------------------------------------------------
+    D118   Round 380.02
+    D119   Rectangle 35.53 X 135.92  Rotation 90
+    D120   Rectangle 157.57 X 202.85  Rotation 90
+    D121   Square 82.77
+    D122   Round 82.77
+    D123   Rectangle 61.00 X 66.00
+    D124   Rectangle 53.00 X 93.00
+    D125   Rectangle 93.00 X 148.00  Rotation 90
+    D126   Rectangle 48.13 X 91.04  Rotation 90
+    D127   Rectangle 281.59 X 439.07
+    D128   Rectangle 159.54 X 218.60
+    D129   Rectangle 84.74 X 126.08  Rotation 90
+    D130   Rectangle 55.21 X 163.48  Rotation 90
+    D131   Rectangle 61.00 X 66.00  Rotation 90
+    D132   Rectangle 68.99 X 139.86  Rotation 90
+    D133   Round 66.00
+    D134   Square 69.00
+    D135   Square 53.24
+    D136   Rectangle 57.18 X 65.06
+    D137   Rectangle 57.18 X 65.06  Rotation 90
+    D138   Rectangle 17.81 X 53.24
+    D139   Rectangle 17.81 X 53.24  Rotation 90
+    D140   Rectangle 47.34 X 57.18
+    D141   Rectangle 49.31 X 76.87
+    D142   Square 45.37
+    D143   Rectangle 36.00 X 101.00  Rotation 90
+    D144   Rectangle 25.69 X 48.32  Rotation 90
+    D145   Rectangle 25.69 X 48.32
+    D146   Rectangle 33.56 X 45.37  Rotation 90
+    D147   Rectangle 27.00 X 73.00  Rotation 90
+    D148   Rectangle 33.56 X 66.04  Rotation 90
+    D149   Round 65.06
+    D182   Round 68.99
+    D183   Rectangle 31.59 X 66.04  Rotation 90
+    D184   Round 85.72
+    D185   Round 49.31
+    D186   Round 139.86
+    D187   Rectangle 31.00 X 56.00
+    D188   Rectangle 124.11 X 147.73
+    D189   Rectangle 108.36 X 124.11  Rotation 90
+    D190   Round 46.00
+    D191   Round 25.69
+    D192   Round 84.74
+
+Gerber Output
+=============
+
+C:\Users\tomde\Documents\GitHub\Tesla-Charger\Plots\Charger_Gen2_V4 - Top Paste Mask.gbr
+
+    Layers:
+    ------------------
+    Top Paste Mask
+
+    D-Code Shape  (thou)
+    ------------------------------------------------
+    D10    Rectangle 23.53 X 123.92  Rotation 90
+    D11    Rectangle 145.57 X 190.85  Rotation 90
+    D12    Rectangle 49.00 X 54.00
+    D13    Rectangle 41.00 X 81.00
+    D14    Rectangle 81.00 X 136.00  Rotation 90
+    D15    Rectangle 36.13 X 79.04  Rotation 90
+    D16    Rectangle 269.59 X 427.07
+    D17    Rectangle 147.54 X 206.60
+    D18    Rectangle 72.74 X 114.08  Rotation 90
+    D19    Rectangle 43.21 X 151.48  Rotation 90
+    D70    Rectangle 49.00 X 54.00  Rotation 90
+    D71    Rectangle 56.99 X 127.86  Rotation 90
+    D20    Square 57.00
+    D21    Square 41.24
+    D22    Rectangle 45.18 X 53.06
+    D23    Rectangle 45.18 X 53.06  Rotation 90
+    D24    Rectangle 5.81 X 41.24
+    D25    Rectangle 5.81 X 41.24  Rotation 90
+    D26    Rectangle 35.34 X 45.18
+    D27    Rectangle 37.31 X 64.87
+    D28    Square 33.37
+    D29    Rectangle 24.00 X 89.00  Rotation 90
+    D72    Rectangle 13.69 X 36.32  Rotation 90
+    D73    Rectangle 13.69 X 36.32
+    D74    Rectangle 21.56 X 33.37  Rotation 90
+    D75    Rectangle 15.00 X 61.00  Rotation 90
+    D76    Rectangle 21.56 X 54.04  Rotation 90
+    D77    Rectangle 19.59 X 54.04  Rotation 90
+    D78    Rectangle 19.00 X 44.00
+    D79    Round 1.00
+    D80    Rectangle 112.11 X 135.73
+    D81    Rectangle 96.36 X 112.11  Rotation 90
+
+Gerber Output
+=============
+
+C:\Users\tomde\Documents\GitHub\Tesla-Charger\Plots\Charger_Gen2_V4 - Top Silkscreen.gbr
+
+    Layers:
+    ------------------
+    Top Silkscreen
+
+    D-Code Shape  (thou)
+    -----------------------
+    D79    Round 1.00
+    D82    Round 5.00
+    D83    Round 5.76
+    D84    Round 3.20
+    D85    Round 4.00
+    D86    Round 7.87
+    D87    Round 12.00
+    D88    Round 10.00
+    D89    Round 3.94
+    D90    Round 27.56
+    D91    Round 8.00
+    D92    Round 3.00
+    D93    Round 0.80
+    D94    Round 6.00
+    D95    Round 8.20
+    D96    Round 0.00
+    D97    Round 25.00
+    D98    Round 1.28
+
+Gerber Output
+=============
+
+C:\Users\tomde\Documents\GitHub\Tesla-Charger\Plots\Charger_Gen2_V4 - Documentation.gbr
+
+    Layers:
+    -----------------
+    Documentation
+
+    D-Code Shape  (thou)
+    -----------------------
+    D82    Round 5.00
+    D87    Round 12.00
+    D99    Round 1.97
+
+Gerber Output
+=============
+
+C:\Users\tomde\Documents\GitHub\Tesla-Charger\Plots\Charger_Gen2_V4 - +5Vcc Plane (Powerplane).gbr
+
+    Layers:
+    -------------------------------------------------------------------------------------
+    +5Vcc Plane  - Plane Isolation Gap 10.00 Thermal Connect Width 10.00 with 4 Spokes
+
+    D-Code Shape  (thou)
+    -----------------------------------------
+    D100   Round 394.02
+    D101   Square 96.77
+    D102   Round 96.77
+    D103   Round 80.00
+    D104   Round 79.06
+    D105   Round 82.99
+    D106   Round 99.72
+    D107   Round 63.31
+    D108   Round 153.86
+    D109   Round 40.00  Thermal Relief Pad
+    D110   Round 19.69  Thermal Relief Pad
+    D111   Round 60.00
+    D112   Round 98.74
+    D113   Round 39.69
+
+Gerber Output
+=============
+
+C:\Users\tomde\Documents\GitHub\Tesla-Charger\Plots\Charger_Gen2_V4 - GND Plane (Powerplane).gbr
+
+    Layers:
+    -----------------------------------------------------------------------------------
+    GND Plane  - Plane Isolation Gap 10.00 Thermal Connect Width 10.00 with 4 Spokes
+
+    D-Code Shape  (thou)
+    -----------------------------------------
+    D100   Round 394.02
+    D101   Square 96.77
+    D102   Round 96.77
+    D103   Round 80.00
+    D104   Round 79.06
+    D105   Round 82.99
+    D106   Round 99.72
+    D107   Round 76.77  Thermal Relief Pad
+    D108   Round 60.00  Thermal Relief Pad
+    D109   Round 59.06  Thermal Relief Pad
+    D110   Round 62.99  Thermal Relief Pad
+    D111   Round 79.72  Thermal Relief Pad
+    D112   Round 63.31
+    D113   Round 153.86
+    D114   Round 60.00
+    D115   Round 39.69
+    D116   Round 40.00  Thermal Relief Pad
+    D117   Round 78.74  Thermal Relief Pad
+    D150   Round 19.69  Thermal Relief Pad
+
+Gerber Output
+=============
+
+C:\Users\tomde\Documents\GitHub\Tesla-Charger\Plots\Charger_Gen2_V4 - Bottom Copper.gbr
+
+    Layers:
+    -----------------
+    Bottom Copper
+
+    D-Code Shape  (thou)
+    -----------------------
+    D10    Round 374.02
+    D11    Square 76.77
+    D12    Round 76.77
+    D13    Round 60.00
+    D14    Round 59.06
+    D15    Round 62.99
+    D16    Round 79.72
+    D17    Round 43.31
+    D18    Round 133.86
+    D19    Round 40.00
+    D70    Round 19.69
+    D71    Round 78.74
+    D20    Round 10.00
+    D21    Round 9.84
+    D22    Round 39.37
+    D23    Round 11.81
+    D24    Round 8.00
+    D25    Round 5.91
+
+Gerber Output
+=============
+
+C:\Users\tomde\Documents\GitHub\Tesla-Charger\Plots\Charger_Gen2_V4 - Bottom Copper (Resist).gbr
+
+    Layers:
+    -----------------
+    Bottom Copper
+
+    D-Code Shape  (thou)
+    -----------------------
+    D26    Round 384.02
+    D27    Square 86.77
+    D28    Round 86.77
+    D29    Round 70.00
+    D72    Round 69.06
+    D73    Round 72.99
+    D74    Round 89.72
+    D75    Round 53.31
+    D76    Round 143.86
+
+Gerber Output
+=============
+
+C:\Users\tomde\Documents\GitHub\Tesla-Charger\Plots\Charger_Gen2_V4 - Bottom Copper (Paste).gbr
+
+    Layers:
+    -----------------
+    Bottom Copper
+
+    D-Code Shape  (thou)
+    -----------------------
+
+NC Drill Output
+===============
+
+C:\Users\tomde\Documents\GitHub\Tesla-Charger\Plots\Charger_Gen2_V4 - Drill Data - [Through Hole].drl
+
+    Output:
+    -----------------------------
+    Plated Round Drill Holes
+    Unplated Round Drill Holes
+    Plated Slots
+    Unplated Slots
+    Plated Board Outlines
+    Unplated Board Outlines
+
+    Tool  Size           Count   ID  (Plated/Unplated)
+    -----------------------------------------------------------
+    T001  0.01181 inches 131   T
+    T002  0.02400 inches 75    I
+    T003  0.02500 inches 1
+    T004  0.02756 inches 5     R
+    T005  0.03200 inches 2     H
+    T006  0.03543 inches 7     P
+    T007  0.03937 inches 2     C
+    T008  0.05118 inches 30    O
+    T009  0.05315 inches 4     Q
+    T010  0.09055 inches 2     S
+    T011  0.17717 inches 6     N
+    -----------------------------------------------------------
+    Total                265
+    -----------------------------------------------------------
+
+
+Gerber Output
+=============
+
+C:\Users\tomde\Documents\GitHub\Tesla-Charger\Plots\Charger_Gen2_V4 - Drill Ident Drawing - [Through Hole].gbr
+
+    Layers:
+    ------------------
+    [Through Hole]
+
+
+Drill Ident Drawing
+===================
+
+    Drill Plated Size Shape ID
+    -----------------------------------
+    39    Y      100  Round C
+    32    Y      100  Round H
+    24    Y      100  Round I
+    177   Y      100  Round N
+    51    Y      100  Round O
+    35    Y      100  Round P
+    53    Y      100  Round Q
+    28    Y      100  Round R
+    91    Y      100  Round S
+    12    Y      100  Round T
+
+    D-Code Shape  (thou)
+    -----------------------
+    D77    Round 100.00
+    D78    Round 5.00
+
+Gerber Output
+=============
+
+C:\Users\tomde\Documents\GitHub\Tesla-Charger\Plots\Charger_Gen2_V4 - Outline.gbr
+
+    Layers:
+    ------------------
+    Board Outlines
+
+    D-Code Shape  (thou)
+    -----------------------
+    D79    Round 12.00
+
+End Of Report.

@@ -1,0 +1,39 @@
+Layers
+------
+
+Report Written:     Wednesday, January 23, 2019
+Design Path:        C:\Users\tomde\Documents\GitHub\Tesla-Charger\Charger V5\Charger_Gen2_V4.pcb
+Design Title:       
+Created:            03-Oct-17 12:16:38 PM
+Last Saved:         23-Jan-19 11:00:40 AM
+Editing Time:       2572 min
+Units:              mm (precision 2)
+
+
+Layers
+======
+
+Name              Type          Side   Usage          Bias        Net
+----------------------------------------------------------------------------------
+Top Copper        Electrical    Top    Electrical     X
+Top Solder Mask   Solder Mask   Top    Non-Electrical None
+Top Paste Mask    Paste Mask    Top    Non-Electrical None
+Top Silkscreen    Silk Screen   Top    Non-Electrical None
+Documentation     Documentation Top    Non-Electrical None
++5Vcc Plane       Electrical    Inner  Electrical     Power Plane +5Vcc
+GND Plane         Electrical    Inner  Electrical     Power Plane GND
+Bottom Copper     Electrical    Bottom Electrical     Y
+Bottom Silkscreen Silk Screen   Bottom Non-Electrical None
+
+Layer Types
+===========
+
+Name          Usage          SMD Pads Free Pads SMD Sym Pads All Layer Pads Vias Oversize
+--------------------------------------------------------------------------------------------------------------
+Electrical    Electrical     Yes      Yes       Yes          Yes            Yes  None
+Solder Mask   Non-Electrical Yes      Yes       Yes          Yes            Yes  Absolute 0.08
+Paste Mask    Non-Electrical Yes      No        Yes          No             No   Absolute -0.08
+Silk Screen   Non-Electrical No       No        No           No             No   None
+Documentation Non-Electrical No       No        No           No             No   None
+
+End Of Report.

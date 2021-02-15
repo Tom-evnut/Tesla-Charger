@@ -1,10 +1,23 @@
+
 /*
   Tesla Gen 2 Charger Control Program
-  2017-2018
+  2017-2019
   T de Bree
   D.Maguire
   Additional work by C. Kidder
-  Runs on OpenSource Logic board V2 in Gen2 charger. Commands all modules.
+  Runs on OpenSource Logic board V3 in Gen2 charger. Commands all modules.
+  
+D.Maguire 2019 Mods :
+-Stop sending power module can messages when charger not running - Working.
+-Correct reading of charger Fault and Enable feedback signals - Working.
+-Correct AC present flag so only sets if more than 70V AC is on each module - Working.
+-Reset charger on detection of power module fault - Testing.
+-Shutdown on exceeding a preset HV Battery voltage - Working. 
+-Evse read routine now in 500ms loop to prevent false triggering -Working.
+-Added counter/timer to autoshutdown to prevent false triggering on transients -Working.
+-Added manual control mode for use of charger without EVSE. Digital one in when brought to +12v commands the charger to start
+and when brought low commands charger off. This mode also control HVDC via digital out 1 and AC mains via a contactor via Digital out 2.-Untested.
+
 */
 
 #include <can_common.h>
@@ -14,41 +27,18 @@
 #include <DueTimer.h>
 #include "config.h"
 #include <rtc_clock.h> ///https://github.com/MarkusLange/Arduino-Due-RTC-Library
-#include <PID_v1.h>
 
 #define Serial SerialUSB
-
-#define   SUPC_KEY                    (0xA5)
-
 template<class T> inline Print &operator <<(Print &obj, T arg) {
   obj.print(arg);
   return obj;
 }
 
-int firmware = 191016;
-
-//////////////Set the hardware version/////////////////
-
-int hardware = BoardV5;
-//int hardware = BoardV4;
-
-RTC_clock rtc_clock(XTAL);
+//RTC_clock rtc_clock(XTAL);
 
 int watchdogTime = 8000;
 
 char* daynames[] = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
-
-//////////////Setup PID for DC current regulation/////////////////
-
-#define PIN_INPUT 0
-#define PIN_OUTPUT 3
-
-//Define Variables we'll be connecting to
-double Setpoint, Input, Output;
-
-//Specify the links and initial tuning parameters
-double Kp = 2, Ki = 5, Kd = 1;
-PID myPID(&Input, &Output, &Setpoint, Kp, Ki, Kd, DIRECT);
 
 
 //*********GENERAL VARIABLE   DATA ******************
@@ -60,12 +50,11 @@ uint16_t curset = 0;
 int  setting = 1;
 int incomingByte = 0;
 int state;
-unsigned long sleeptime, slavetimeout, tlast, tcan, tboot, droptime = 0;
-bool dropsignal = 0;
+unsigned long slavetimeout, tlast, tcan,tpause, tboot = 0;
 bool bChargerEnabled;
 
 
-//**************Sleep Variables****************
+
 
 //*********EVSE VARIABLE   DATA ******************
 byte Proximity = 0;
@@ -91,11 +80,10 @@ uint16_t cablelim = 0; // Type 2 cable current limit
 //*********Charger Control VARIABLE   DATA ******************
 bool Vlimmode = true; // Set charges to voltage limit mode
 uint16_t modulelimcur, dcaclim = 0;
-uint32_t maxaccur = 16000; //maximum AC current in mA
+uint16_t maxaccur = 16000; //maximum AC current in mA
 uint16_t maxdccur = 45000; //max DC current outputin mA
 int activemodules, slavechargerenable = 0;
-bool LockOut = false; //lockout on termination voltage reached. Reset by evse plug recycle.
-uint16_t LockOutCnt = 0; // lockout counter
+
 
 
 //*********Feedback from charge VARIABLE   DATA ******************
@@ -111,6 +99,7 @@ byte templeg[2][3] = {{0, 0, 0}, {0, 0, 0}}; //temperatures reported back
 bool ACpres [3] = {0, 0, 0}; //AC present detection on the modules
 bool ModEn [3] = {0, 0, 0}; //Module enable feedback on the modules
 bool ModFlt [3] = {0, 0, 0}; //module fault feedback
+bool LockOut = false; //lockout on termination voltage reached. Reset by evse plug recycle.
 byte ModStat [3] = {0, 0, 0};//Module Status
 int newframe = 0;
 
@@ -125,6 +114,7 @@ int StatusID = 0x410;
 unsigned long ElconID = 0x18FF50E5;
 unsigned long ElconControlID = 0x1806E5F4;
 
+uint16_t LockOutCnt=0;// lockout counter
 
 int candebug = 0;
 int menuload = 0;
@@ -137,29 +127,12 @@ void watchdogSetup(void)
 
 void setup()
 {
-  pmc_set_writeprotect(false);
-  pmc_mck_set_prescaler(16);
 
-  // 12MHz / 64 * 14 = 2.625MHz //  96 = 110 << 4 = /64
-  // 12MHz / 32 * 14 = 5.25 MHz //  80 = 101 << 4 = /32
-  // 12MHz / 16 * 14 = 10.5 MHz //  64 = 100 << 4 = /16
-  // 12MHz /  8 * 14 = 21   MHz //  48 = 011 << 4 = /8
-  // 12MHz /  4 * 14 = 42   MHz //  32 = 010 << 4 = /4
-  // 12MHz /  2 * 14 = 84   MHz //  16 = 001 << 4 = /2 (default)
-
-  pmc_disable_periph_clk(22);  // TWI/I2C bus 0 (i.MX6 controlling)
-  pmc_disable_periph_clk(23);  // TWI/I2C bus 1
-  pmc_disable_periph_clk(24);  // SPI0
-  pmc_disable_periph_clk(25);  // SPI1
-  pmc_disable_periph_clk(26);  // SSC (I2S digital audio, N/C)
-
-  pmc_disable_periph_clk(41);  // random number generator
-  pmc_disable_periph_clk(42);  // ethernet MAC - N/C
 
 
   Serial.begin(115200);  //Initialize our USB port which will always be redefined as SerialUSB to use the Native USB port tied directly to the SAM3X processor.
 
-  Timer3.attachInterrupt(Ext_msgs).start(90000); // charger messages every 100ms
+ // Timer3.attachInterrupt(Charger_msgs).start(90000); // charger messages every 100ms
 
   attachInterrupt(EVSE_PILOT, Pilotread , CHANGE);
   watchdogEnable(watchdogTime);
@@ -171,7 +144,7 @@ void setup()
     parameters.currReq = 0; //max input limit per module 1500 = 1A
     parameters.enabledChargers = 123; // enable per phase - 123 is all phases - 3 is just phase 3
     parameters.can0Speed = 500000;
-    parameters.can1Speed = 250000;
+    parameters.can1Speed = 500000;
     parameters.mainsRelay = 48;
     parameters.voltSet = 32000; //1 = 0.01V
     parameters.tVolt = 34000;//1 = 0.01V
@@ -180,16 +153,14 @@ void setup()
     parameters.dcdcsetpoint = 14000; //voltage setpoint for dcdc in mv
     parameters.phaseconfig = Threephase; //AC input configuration
     parameters.type = 2; //Socket type1 or 2
-    parameters.sleeptimeout = 30000; // mS before entering sleep
     EEPROM.write(0, parameters);
   }
-
-  ////rtc clock start///////
-
-  rtc_clock.init();
-
-  //rtc_clock.set_time(19, 35, 0);
-  //rtc_clock.set_date(16, 11, 2018);
+  /*
+    ////rtc clock start///////
+    rtc_clock.init();
+    rtc_clock.set_time(19, 35, 0);
+    rtc_clock.set_date(16, 11, 2018);
+  */
 
   // Initialize CAN ports
   if (Can1.begin(parameters.can1Speed, 255)) //can1 external bus
@@ -231,13 +202,6 @@ void setup()
   pinMode(CHARGER1_ACTIVATE, OUTPUT); //CHG1 ACTIVATE
   pinMode(CHARGER2_ACTIVATE, OUTPUT);  //CHG2 ACTIVATE
   pinMode(CHARGER3_ACTIVATE, OUTPUT); //CHG3 ACTIVATE
-
-  digitalWrite(CHARGER1_ACTIVATE, LOW); //chargeph1 deactivate
-  digitalWrite(CHARGER2_ACTIVATE, LOW); //chargeph2 deactivate
-  digitalWrite(CHARGER3_ACTIVATE, LOW); //chargeph3 deactivate
-  digitalWrite(CHARGER1_ENABLE, LOW);//disable phase 1 power module
-  digitalWrite(CHARGER2_ENABLE, LOW);//disable phase 2 power module
-  digitalWrite(CHARGER3_ENABLE, LOW);//disable phase 3 power module
   //////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -251,28 +215,11 @@ void setup()
   pinMode(DIG_OUT_3, OUTPUT); //OP2
   pinMode(DIG_OUT_4, OUTPUT); //OP3
   pinMode(EVSE_ACTIVATE, OUTPUT); //pull Pilot to 6V
-
-  digitalWrite(EVSE_ACTIVATE, LOW);
-  digitalWrite(DIG_OUT_1, LOW);//MAINS OFF
-  digitalWrite(DIG_OUT_2, LOW);//AC OFF when in manual mode.
-  digitalWrite(DIG_OUT_3, LOW);
-  digitalWrite(DIG_OUT_4, LOW);
   ///////////////////////////////////////////////////////////////////////////////////////
 
-  ///////////////Setup Sleep Mode Wake Ups////////////////////////////////////////////////////////////////////////
-
-  uint16_t tmp =  ((1 << 12) | (1 << 5) | (1 << 1) | 1); // Wake up on CAN1 RX AND D19 AND D60 AND CAN0 RX
-  SUPC->SUPC_WUIR = tmp;          // above sources, low-> high transition
-  SUPC->SUPC_WUMR = 0;            // try no debouncing; 1 << 12 for 3 cycle
-
-  ///////////////////////////////////////////////////////////////////////////////////////
   dcaclim = maxaccur;
   bChargerEnabled = false; //are we supposed to command the charger to charge?
   //
-
-  myPID.SetMode(AUTOMATIC); //start PID
-
-  sleeptime = millis(); //update timer
 }
 
 void loop()
@@ -283,7 +230,6 @@ void loop()
   {
     Can0.read(incoming);
     candecode(incoming);
-    sleeptime = millis(); //update timer
   }
 
   if (Can1.available())
@@ -292,13 +238,11 @@ void loop()
     //Serial.print("can 1 data");
     Can1.read(incoming);
     canextdecode(incoming);
-    sleeptime = millis(); //update timer
   }
 
   if (Serial.available())
   {
     menu();
-    sleeptime = millis(); //update timer
   }
 
   if (parameters.canControl > 1)
@@ -316,40 +260,29 @@ void loop()
 
   if (digitalRead(DIG_IN_1) == LOW)
   {
-    state = 0;
+   state = 0;
   }
 
   switch (state)
   {
     case 0: //Charger off
-      //Serial.println();
-      //Serial.println("Enter State 0");
-      //Serial.println();
+   Timer3.detachInterrupt(); // stop sending charger power module CAN messages
       if (bChargerEnabled == true)
       {
         bChargerEnabled = false;
       }
-      digitalWrite(DIG_OUT_1, LOW);//MAINS OFF\
+      digitalWrite(DIG_OUT_1, LOW);//HV OFF
       digitalWrite(EVSE_ACTIVATE, LOW);
-      //digitalWrite(DIG_OUT_2, LOW);//AC OFF when in manual mode.
+      digitalWrite(DIG_OUT_2, LOW);//AC OFF when in manual mode.
       digitalWrite(CHARGER1_ACTIVATE, LOW); //chargeph1 deactivate
       digitalWrite(CHARGER2_ACTIVATE, LOW); //chargeph2 deactivate
       digitalWrite(CHARGER3_ACTIVATE, LOW); //chargeph3 deactivate
       digitalWrite(CHARGER1_ENABLE, LOW);//disable phase 1 power module
       digitalWrite(CHARGER2_ENABLE, LOW);//disable phase 2 power module
       digitalWrite(CHARGER3_ENABLE, LOW);//disable phase 3 power module
-      for (int y; y < 3; y++)
-      {
-        dcvolt[y] = 0;
-        dccur[y] = 0;
-        totdccur = 0;//1 = 0.005Amp
-        acvolt[y] = 0;
-        accur[y] = 0;
-      }
       break;
 
     case 1://Charger on
-      sleeptime = millis(); //update timer
       if (digitalRead(DIG_IN_1) == HIGH)
       {
         if (bChargerEnabled == false)
@@ -396,19 +329,20 @@ void loop()
               break;
           }
           delay(100);
-          digitalWrite(DIG_OUT_1, HIGH);//MAINS ON
-          digitalWrite(EVSE_ACTIVATE, HIGH);
+          digitalWrite(DIG_OUT_1, HIGH);//HV ON
+          digitalWrite(EVSE_ACTIVATE, HIGH); //evse on
           digitalWrite(DIG_OUT_2, HIGH);//AC on in manual mode
         }
       }
       else
       {
-        bChargerEnabled = false;
+        bChargerEnabled == false;
         state = 0;
       }
       break;
 
     case 2:
+     Timer3.attachInterrupt(Charger_msgs).start(90000); // start sending charger power module CAN messages
       switch (parameters.enabledChargers)
       {
         case 1:
@@ -442,11 +376,11 @@ void loop()
           // if nothing else matches, do the default
           break;
       }
-      if (tboot <  (millis() - 1000))//delay in ms before moving to state 1.
+      if (tboot <  (millis() - 1000)) //delay in ms before moving to state 1.
       {
         state = 1;
       }
-
+    
     default:
       // if nothing else matches, do the default
       break;
@@ -455,29 +389,18 @@ void loop()
   {
     tlast = millis();
     evseread();
-    //autoShutdown();
+    autoShutdown();
     watchdogReset();
+    manualMode();
     if (debug != 0)
     {
-      if (hardware == BoardV5)
-      {
-        if (millis() - sleeptime > parameters.sleeptimeout - 10000)
-        {
-          Serial.println();
-          Serial.println();
-          Serial.println();
-          Serial.print("!!!!! Sleep in: ");
-          Serial.print((sleeptime - (millis() - parameters.sleeptimeout)) * 0.001);
-          Serial.print(" S");
-        }
-      }
       Serial.println();
       Serial.print(millis());
       Serial.print(" State: ");
       Serial.print(state);
       Serial.print(" Phases : ");
       Serial.print(parameters.phaseconfig);
-      Serial.print(" Modules Active : ");
+      Serial.print(" Modules Avtive : ");
       Serial.print(activemodules);
       if (bChargerEnabled)
       {
@@ -495,24 +418,8 @@ void loop()
       {
         Serial.print(" D1 L");
       }
-      if (digitalRead(DIG_OUT_1) == HIGH)
-      {
-        Serial.print(" O1 H");
-      }
-      else
-      {
-        Serial.print(" O1 L");
-      }
-      if (digitalRead(DIG_OUT_2) == HIGH)
-      {
-        Serial.print(" O2 H");
-      }
-      else
-      {
-        Serial.print(" O2 L");
-      }
-      Serial.print(" Droptime : ");
-      Serial.print(droptime);
+
+
       if (bChargerEnabled)
       {
         Serial.println();
@@ -585,6 +492,8 @@ void loop()
         Serial.print(totdccur * 0.005, 2);
         Serial.print(" /DC Setpoint:");
         Serial.print(parameters.voltSet * 0.01, 0);
+        Serial.print(" /DC tVolt:");
+        Serial.print(parameters.tVolt*0.01, 0);
         Serial.print(" /DC driven AC Cur Lim: ");
         Serial.print(dcaclim);
       }
@@ -594,13 +503,18 @@ void loop()
   DCcurrentlimit();
   ACcurrentlimit();
 
-  //resetFaults();
+     resetFaults();
 
-  //EVSE automatic control
+
+
+
+
+
+
 
   if (parameters.autoEnableCharger == 1)
   {
-    if (Proximity == Connected) //check if plugged in
+    if ((Proximity == Connected)&&(LockOut==false)) //check if plugged in and not locked out
     {
       //digitalWrite(EVSE_ACTIVATE, HIGH);//pull pilot low to indicate ready - NOT WORKING freezes PWM reading
       if (accurlim > 1400) // one amp or more active modules
@@ -618,99 +532,120 @@ void loop()
     }
     else // unplugged or buton pressed stop charging
     {
-      if (dropsignal == 0)
-      {
-        droptime == millis();
-        dropsignal == 1;
-      }
-      else
-      {
-        if (millis() - millis() < 1000)
-        {
-          state = 0;
-          digitalWrite(DIG_OUT_2, LOW); //disable AC present indication
-          dropsignal == 0;
-        }
-      }
-    }
-  }
-  if (hardware == BoardV5)///Ensure to only sleep on boards that can wake up
-  {
-    if (millis() - sleeptime > parameters.sleeptimeout && menuload != 1)
-    {
-      Serial.println();
-      Serial.println();
-      Serial.print("Entering Sleep");
-      delay(10);
-      pmc_enable_backupmode();
+      state = 0;
+      digitalWrite(DIG_OUT_2, LOW); //disable AC present indication
+      digitalWrite(EVSE_ACTIVATE, LOW);// shut off evse
     }
   }
 
+
+  
 }//end of loop
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //If a charger power module is running and faults out we want to reset and go again otherwise charger can just sit there and not finish a charge.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void resetFaults() {
+void resetFaults(){
 
 
-  if ((bChargerEnabled == true) && (ACpres[0] == true) && (ModFlt[0] == true) && ((parameters.enabledChargers == 1) || (parameters.enabledChargers == 12) || (parameters.enabledChargers == 13) || (parameters.enabledChargers == 123)))
-  {
-    //if these conditions are met then phase one is enabled, has ac present and has entered a fault state so we want to reset.
-    state = 0;
-    //digitalWrite(DIG_OUT_2, LOW); //disable AC present indication;
-    //  digitalWrite(EVSE_ACTIVATE, LOW);
-  }
-  if ((bChargerEnabled == true) && (ACpres[1] == true) && (ModFlt[1] == true) && ((parameters.enabledChargers == 2) || (parameters.enabledChargers == 12) || (parameters.enabledChargers == 23) || (parameters.enabledChargers == 123)))
-  {
-    //if these conditions are met then phase two is enabled, has ac present and has entered a fault state so we want to reset.
-    state = 0;
-    //digitalWrite(DIG_OUT_2, LOW); //disable AC present indication;
-    //digitalWrite(EVSE_ACTIVATE, LOW);
-  }
-  if ((bChargerEnabled == true) && (ACpres[2] == true) && (ModFlt[2] == true) && ((parameters.enabledChargers == 3) || (parameters.enabledChargers == 13) || (parameters.enabledChargers == 23) || (parameters.enabledChargers == 123)))
-  {
-    //if these conditions are met then phase three is enabled, has ac present and has entered a fault state so we want to reset.
-    state = 0;
-    //digitalWrite(DIG_OUT_2, LOW); //disable AC present indication;
-    //digitalWrite(EVSE_ACTIVATE, LOW);
-  }
-
-
+if ((bChargerEnabled == true) && (ACpres[0] == true) && (ModFlt[0] ==true) && ((parameters.enabledChargers == 1) || (parameters.enabledChargers == 12) || (parameters.enabledChargers == 13) || (parameters.enabledChargers == 123)))
+    {
+      //if these conditions are met then phase one is enabled, has ac present and has entered a fault state so we want to reset.
+            state = 0;
+      digitalWrite(DIG_OUT_2, LOW); //disable AC present indication;
+          //  digitalWrite(EVSE_ACTIVATE, LOW);
+    }
+  if ((bChargerEnabled == true) && (ACpres[1] == true) && (ModFlt[1] ==true) && ((parameters.enabledChargers == 2) || (parameters.enabledChargers == 12) || (parameters.enabledChargers == 23) || (parameters.enabledChargers == 123)))
+    {
+      //if these conditions are met then phase two is enabled, has ac present and has entered a fault state so we want to reset.
+            state = 0;
+      digitalWrite(DIG_OUT_2, LOW); //disable AC present indication;
+            //digitalWrite(EVSE_ACTIVATE, LOW);
+    }
+ if ((bChargerEnabled == true) && (ACpres[2] == true) && (ModFlt[2] ==true) && ((parameters.enabledChargers == 3) || (parameters.enabledChargers == 13) || (parameters.enabledChargers == 23) || (parameters.enabledChargers == 123)))
+    {
+      //if these conditions are met then phase three is enabled, has ac present and has entered a fault state so we want to reset.
+            state = 0;
+      digitalWrite(DIG_OUT_2, LOW); //disable AC present indication;
+            //digitalWrite(EVSE_ACTIVATE, LOW);
+    }
+      
+  
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //If the HV voltage exceeds the tVolt setpoint we want to shut down the charger and not re enable until the charge plug
 //is removed and re connected. For now we just read the voltage on phase module one.
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void autoShutdown() {
-  if ((bChargerEnabled == true) && (LockOut == false)) //if charger is running and we are not locked out ...
+void autoShutdown(){
+  if ((bChargerEnabled ==true)&&(LockOut==false)) //if charger is running and we are not locked out ...
   {
-    if (dcvolt[0] > (parameters.tVolt * 0.01)) //and if we exceed tVolt...
+    if (dcvolt[0]>(parameters.tVolt*0.01)) //and if we exceed tVolt...
     {
-      LockOutCnt++; //increment the lockout counter
-      //      LockOut=true; //lockout and shutdown
-      //    state=0;
-    }
-    else
-    {
-      LockOutCnt = 0; //other wise we reset the lockout counter
-    }
-
+        LockOutCnt++; //increment the lockout counter
+//      LockOut=true; //lockout and shutdown
+  //    state=0;
   }
-  if (Proximity == Unconnected && (parameters.autoEnableCharger == 1)) LockOut = false; //re set the lockout flag when the evse plug is pulled only if we are in evse mode.
-
-  if (LockOutCnt > 10)
+  else
   {
-    state = 0; //if we are above our shutdown targer for 10 consecutive counts we lockout
-    LockOut = true; //lockout and shutdown
-    LockOutCnt = 0;
+    LockOutCnt=0; //other wise we reset the lockout counter
+  }
+  
+  }
+  if (Proximity == Unconnected&&(parameters.autoEnableCharger == 1)) LockOut=false;  //re set the lockout flag when the evse plug is pulled only if we are in evse mode.
+
+  if (LockOutCnt>10)
+  {
+  state=0; //if we are above our shutdown targer for 10 consecutive counts we lockout
+  LockOut=true; //lockout and shutdown
+  LockOutCnt=0;
   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///Manual control mode via Digital input 1. Special case for A.Rish.
+/////////////////////////////////////////////////////////////////////////////////////
+void manualMode()
+{
+
+  if (parameters.autoEnableCharger == 0)//if we are not in auto mode ...
+  {
+        if (state == 0)//....and if we are currently turned off....
+        {
+          if (digitalRead(DIG_IN_1) == HIGH&&(LockOut==false))//...and if digital one is high....
+          {
+            state = 2;// initialize modules. Fire up the charger.
+            tboot = millis();
+          }
+        }
+
+
+          
+          if (digitalRead(DIG_IN_1) == LOW)//...if brought low then we shutoff the charger.
+          {
+            state = 0;//
+            LockOut=false;//release lockout when dig 1 in is brought low.
+          }
+        
+      
+   
+
+  
+}
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
 
 
 void candecode(CAN_FRAME & frame)
@@ -881,6 +816,7 @@ void candecode(CAN_FRAME & frame)
       break;
   }
 }
+
 void Charger_msgs()
 {
   CAN_FRAME outframe;  //A structured variable according to due_can library for transmitting CAN data.
@@ -915,7 +851,7 @@ void Charger_msgs()
   if (bChargerEnabled)
   {
     outframe.data.bytes[1] = 0xBB;
-    outframe.data.bytes[4] = 0xFE;
+    outframe.data.bytes[4] = 0xFE; //FE dont clear faults. FF do clear faults.
   }
   else
   {
@@ -947,15 +883,9 @@ void Charger_msgs()
   outframe.data.bytes[6] = 0x40;
   outframe.data.bytes[7] = 0xff;
   Can0.sendFrame(outframe);
-}
-
-void Ext_msgs()
-{
   /*////////////////////////////////////////////////////////////////////////////////////////////////////////
     External CAN
     ////////////////////////////////////////////////////////////////////////////////////////////////////////*/
-  CAN_FRAME outframe;  //A structured variable according to due_can library for transmitting CAN data.
-
   uint16_t y, z = 0;
   outframe.id = StatusID;
   if (parameters.canControl == 3)
@@ -1007,19 +937,18 @@ void Ext_msgs()
   outframe.length = 8;            // Data payload 8 bytes
   outframe.extended = 1;          // Extended addresses - 0=11-bit 1=29bit
   outframe.rtr = 0;                 //No request
+
+
   outframe.data.bytes[0] = highByte (y * 10 / 3);
   outframe.data.bytes[1] = lowByte (y * 10 / 3);
-  outframe.data.bytes[2] = highByte (uint16_t (totdccur * 5)); //0.005Amp conv to 0.1
-  outframe.data.bytes[3] = lowByte (uint16_t (totdccur * 5)); //0.005Amp conv to 0.1
+  outframe.data.bytes[2] = highByte (uint16_t (totdccur * 20)); //0.005Amp conv to 0.1
+  outframe.data.bytes[3] = lowByte (uint16_t (totdccur * 20)); //0.005Amp conv to 0.1
   outframe.data.bytes[4] = 0x00;
-  if (state != 0)
-  {
-    outframe.data.bytes[4] = 0x08;
-  }
   outframe.data.bytes[5] = 0x00;
   outframe.data.bytes[6] = 0x00;
   outframe.data.bytes[7] = 0x00;
   Can1.sendFrame(outframe);
+
 
   ///DCDC CAN//////////////////////////////////////////////////////////////////////
   if (dcdcenable)
@@ -1066,23 +995,23 @@ void Ext_msgs()
 
     Can1.sendFrame(outframe);
   }
-
-  if (state != 0)
-  {
-    Charger_msgs();
-  }
 }
 
 void evseread()
 {
-  uint16_t val = 0;
+  uint16_t val=0;
   val = analogRead(EVSE_PROX);     // read the input pin
+
+
+
+
+
+  
   if ( parameters.type == 2)
   {
     if ( val > 950)
     {
       Proximity = Unconnected;
-      cablelim = 0;
     }
     else
     {
@@ -1159,12 +1088,10 @@ void ACcurrentlimit()
     else
     {
       modulelimcur = accurlim * 1.5; // one module per phase, EVSE current limit is per phase
-      /*
       if (modulelimcur > (cablelim * 1.5))
       {
         modulelimcur = cablelim * 1.5;
       }
-      */
     }
   }
   else
@@ -1184,6 +1111,7 @@ void ACcurrentlimit()
     {
       modulelimcur = modulelimcur * 0.5;
       slavechargerenable = 1;
+
     }
     else
     {
@@ -1226,11 +1154,16 @@ void DCcurrentlimit()
   {
     totdccur = totdccur + (dccur[x] * 0.1678466) ;
   }
-  Input = totdccur;
-  Setpoint = maxdccur;
-  myPID.Compute();
-
-  dcaclim = Output;
+  dcaclim = 0;
+  int x = 0;
+  if (totdccur > 0.2)
+  {
+    dcaclim = (((float)dcvolt[x] / (float)acvolt[x]) * (maxdccur * 1.2)) ; /// activemodules
+  }
+  else
+  {
+    dcaclim = 5000;
+  }
 }
 
 void canextdecode(CAN_FRAME & frame)
@@ -1243,7 +1176,7 @@ void canextdecode(CAN_FRAME & frame)
       parameters.voltSet = ((frame.data.bytes[0] << 8) + frame.data.bytes[1]) * 0.1;
       maxdccur = (frame.data.bytes[2] << 8) + frame.data.bytes[3];
 
-      if (frame.data.bytes[4] & 0x01 == 0)
+      if (frame.data.bytes[4] & 0x01 == 1)
       {
         if (state == 0)
         {
@@ -1264,8 +1197,7 @@ void canextdecode(CAN_FRAME & frame)
           Serial.print(" ");
           Serial.print(parameters.voltSet);
           Serial.print(" ");
-          Serial.print(maxdccur);
-          Serial.print(" A ");
+          Serial.print(modulelimcur);
           Serial.println();
         }
         tcan = millis();
@@ -1455,6 +1387,7 @@ void menu()
           incomingByte = 'd';
         }
         break;
+        /*
       case 'c': //c for time
         if (Serial.available() > 0)
         {
@@ -1471,14 +1404,7 @@ void menu()
           incomingByte = 'd';
         }
         break;
-      case 's'://t for termaintion voltage setting in whole numbers
-        if (Serial.available() > 0)
-        {
-          parameters.sleeptimeout = (Serial.parseInt() * 1000);
-          menuload = 0;
-          incomingByte = 'd';
-        }
-        break;
+        */
       case 't'://t for termaintion voltage setting in whole numbers
         if (Serial.available() > 0)
         {
@@ -1487,6 +1413,11 @@ void menu()
           incomingByte = 'd';
         }
         break;
+
+
+
+
+        
     }
   }
 
@@ -1495,32 +1426,23 @@ void menu()
     switch (incomingByte)
     {
       case 's'://s for start AND stop
-        if (Serial.available() > 0)
-        {
-          setting = 1;
-          digitalWrite(LED_BUILTIN, HIGH);
-          if (Serial.parseInt() == 1)
-          {
-            if (state == 0)
-            {
+             digitalWrite(LED_BUILTIN, HIGH);
               state = 2;// initialize modules
               tboot = millis();
-            }
-          }
-          if (Serial.parseInt() == 0)
-          {
-            if (state == 1)
+        break;
+
+     case 'o':   
+            if (state > 0)
             {
+              digitalWrite(LED_BUILTIN, LOW);
               state = 0;// initialize modules
             }
-          }
-        }
+         break;
 
       case 'q': //q for quit
         EEPROM.write(0, parameters);
         debug = 1;
         menuload = 0;
-        sleeptime = millis();
         break;
 
       case 'd'://d for display
@@ -1529,10 +1451,6 @@ void menu()
         Serial.println();
         Serial.println();
         Serial.println();
-        Serial.println("Zero-EV Tesla Charger");
-        Serial.println();
-        Serial.print("Firmware : ");
-         Serial.print(firmware);
         Serial.println();
         Serial.println("Settings Menu");
         Serial.print("1 - Auto Enable : ");
@@ -1596,24 +1514,21 @@ void menu()
           Serial.println("OFF");
         }
         /*
-                Serial.print("c - time : ");
-                Serial.print(rtc_clock.get_hours());
-                Serial.print(":");
-                Serial.print(rtc_clock.get_minutes());
-                Serial.print(":");
-                Serial.println(rtc_clock.get_seconds());
-                Serial.print("d - date : ");
-                Serial.print(daynames[rtc_clock.get_day_of_week() - 1]);
-                Serial.print(": ");
-                Serial.print(rtc_clock.get_days());
-                Serial.print(".");
-                Serial.print(rtc_clock.get_months());
-                Serial.print(".");
-                Serial.println(rtc_clock.get_years());
+          Serial.print("c - time : ");
+          Serial.print(rtc_clock.get_hours());
+          Serial.print(":");
+          Serial.print(rtc_clock.get_minutes());
+          Serial.print(":");
+          Serial.println(rtc_clock.get_seconds());
+          Serial.print("d - date : ");
+          Serial.print(daynames[rtc_clock.get_day_of_week() - 1]);
+          Serial.print(": ");
+          Serial.print(rtc_clock.get_days());
+          Serial.print(".");
+          Serial.print(rtc_clock.get_months());
+          Serial.print(".");
+          Serial.println(rtc_clock.get_years());
         */
-        Serial.print("s - Sleep Time Out : ");
-        Serial.print(parameters.sleeptimeout * 0.001, 0);
-        Serial.println(" S");
         Serial.print("t - termination voltage : ");
         Serial.print(parameters.tVolt * 0.01, 0);
         Serial.println("V");
