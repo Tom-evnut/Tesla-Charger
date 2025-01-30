@@ -36,6 +36,8 @@ template<class T> inline Print &operator <<(Print &obj, T arg) {
   return obj;
 }
 
+int firmware = 230207;
+
 //Curent filter//
 
 movingAvg AvgCP(100);                // define the moving average object
@@ -1036,12 +1038,7 @@ void evseread()
 {
   uint16_t val = 0;
   val = analogRead(EVSE_PROX);     // read the input pin
-
-
-
-
-
-
+  
   if ( parameters.type == 2)
   {
     if ( val > 950)
